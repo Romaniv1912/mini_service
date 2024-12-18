@@ -6,9 +6,12 @@ from asgi_correlation_id.middleware import is_valid_uuid4
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 
+from src.app.api.router import router
 from src.core.conf import LOG_DIR, settings
 from src.database import create_table
+from src.utils.health_check import ensure_unique_route_names
 from src.utils.logs import set_customize_logfile, setup_logging
+from src.utils.openapi import simplify_operation_ids
 
 
 @asynccontextmanager
@@ -60,7 +63,11 @@ def register_router(app: FastAPI):
     """
 
     # API
-    # TODO: register routers
+    app.include_router(router)
+
+    # Extra
+    ensure_unique_route_names(app)
+    simplify_operation_ids(app)
 
 
 def register_logger() -> None:
