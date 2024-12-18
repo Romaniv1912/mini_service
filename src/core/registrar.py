@@ -39,7 +39,7 @@ def register_app():
         redoc_url=settings.APP.REDOCS_URL,
         openapi_url=settings.APP.OPENAPI_URL,
         root_path=settings.APP.BASE_PATH,
-        debug=settings.DEBUG,
+        debug=settings.APP.DEBUG,
         lifespan=register_init,
     )
 
