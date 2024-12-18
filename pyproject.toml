@@ -5,7 +5,10 @@ description = "Default template for PDM package"
 authors = [
     {name = "Romaniv1912", email = "romaniv1912@gmail.com"},
 ]
-dependencies = []
+dependencies = [
+    "ruff>=0.8.3",
+    "pre-commit>=4.0.1",
+]
 requires-python = "==3.10.*"
 readme = "README.md"
 license = {text = "MIT"}
