@@ -21,9 +21,9 @@ class ProductService:
         return product_dao.get_list()
 
     @staticmethod
-    async def create(*, obj: CreateProductParam) -> None:
+    async def create(*, obj: CreateProductParam) -> Product:
         async with async_db_session.begin() as db:
-            await async_db_session.create(db, obj)
+            return await product_dao.create(db, obj)
 
     @staticmethod
     async def update(*, pk: int, obj: UpdateProductParam) -> Product:
@@ -41,6 +41,9 @@ class ProductService:
     async def delete(*, pk: int) -> int:
         async with async_db_session.begin() as db:
             count = await product_dao.delete(db, pk)
+
+        if not count:
+            raise HTTPException(404, 'Product not found')
 
         return count
 
