@@ -13,12 +13,7 @@ from src.utils.logs import log
 def create_engine_and_session(url: str, *, echo: bool = False):
     try:
         # Database engine
-        engine = create_async_engine(
-            url,
-            echo=echo,
-            future=True,
-            pool_pre_ping=True
-        )
+        engine = create_async_engine(url, echo=echo, future=True, pool_pre_ping=True)
         # log.success('The database connection is successful')
     except Exception as e:
         log.error("❌ Database link failed {}", e)
@@ -30,7 +25,9 @@ def create_engine_and_session(url: str, *, echo: bool = False):
         return engine, db_session
 
 
-async_engine, async_db_session = create_engine_and_session(settings.APP.DB_URL, echo=settings.APP.DB_ECHO)
+async_engine, async_db_session = create_engine_and_session(
+    settings.APP.DB_URL, echo=settings.APP.DB_ECHO
+)
 
 
 async def get_db() -> AsyncSession:
