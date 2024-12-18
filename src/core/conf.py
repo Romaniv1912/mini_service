@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """Get global configuration"""
-    return AppSettings()
+    return Settings()
 
 
 # Create configuration instance
