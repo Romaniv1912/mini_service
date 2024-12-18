@@ -1,4 +1,5 @@
 import os
+
 from functools import lru_cache
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from src.common.settings import AppSettings, LogSettings
 BASE_PATH = Path(__file__).resolve().parent.parent.parent
 
 # Log file path
-LOG_DIR = os.path.join(BASE_PATH, "logs")
+LOG_DIR = os.path.join(BASE_PATH, 'logs')
 
 
 class Settings(BaseSettings):

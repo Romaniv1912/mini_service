@@ -16,18 +16,14 @@ def create_engine_and_session(url: str, *, echo: bool = False):
         engine = create_async_engine(url, echo=echo, future=True, pool_pre_ping=True)
         # log.success('The database connection is successful')
     except Exception as e:
-        log.error("❌ Database link failed {}", e)
+        log.error('❌ Database link failed {}', e)
         sys.exit()
     else:
-        db_session = async_sessionmaker(
-            bind=engine, autoflush=False, expire_on_commit=False
-        )
+        db_session = async_sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
         return engine, db_session
 
 
-async_engine, async_db_session = create_engine_and_session(
-    settings.APP.DB_URL, echo=settings.APP.DB_ECHO
-)
+async_engine, async_db_session = create_engine_and_session(settings.APP.DB_URL, echo=settings.APP.DB_ECHO)
 
 
 async def get_db() -> AsyncSession:

@@ -14,18 +14,18 @@ id_key = Annotated[
         index=True,
         autoincrement=True,
         sort_order=-999,
-        comment="Primary key id",
+        comment='Primary key id',
     ),
 ]
 
 
 # Convention naming, needs to improve naming in database though SQLAlchemy
 constraint_naming_conventions = {
-    "ix": "ix_%(column_0_label)s",
-    "uq": "uq_%(table_name)s_%(column_0_name)s",
-    "ck": "ck_%(table_name)s_%(constraint_name)s",
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s",
+    'ix': 'ix_%(column_0_label)s',
+    'uq': 'uq_%(table_name)s_%(column_0_name)s',
+    'ck': 'ck_%(table_name)s_%(constraint_name)s',
+    'fk': 'fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s',
+    'pk': 'pk_%(table_name)s',
 }
 
 
@@ -37,14 +37,14 @@ class DateTimeMixin(MappedAsDataclass):
         init=False,
         default_factory=datetime.now,
         sort_order=999,
-        comment="creation time",
+        comment='creation time',
     )
     updated_time: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         init=False,
         onupdate=datetime.now,
         sort_order=999,
-        comment="update time",
+        comment='update time',
     )
 
 

@@ -126,7 +126,7 @@ def register_middleware(app: FastAPI):
             CORSMiddleware,  # type: ignore
             allow_origins=settings.APP.CORS_ALLOWED_ORIGINS,
             allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+            allow_methods=['*'],
+            allow_headers=['*'],
             expose_headers=settings.APP.CORS_EXPOSE_HEADERS,
         )
