@@ -1,9 +1,14 @@
-from fastapi import HTTPException
-from sqlalchemy import Select
+import asyncio
+
+from typing import Annotated, List, Sequence, Tuple
+
+from fastapi import HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.crud.product import product_dao
 from src.app.model import Product
 from src.app.schema.product import CreateProductParam, UpdateProductParam
+from src.common.schema import GetPageParams
 from src.database import async_db_session
 
 
@@ -17,8 +22,18 @@ class ProductService:
             return product
 
     @staticmethod
-    async def get_select() -> Select:
-        return product_dao.get_list()
+    async def get_page(params: GetPageParams, *, with_total=True) -> Sequence[Product] | Tuple[Sequence[Product], int]:
+        limit, offset = params.get_raw()
+
+        async with async_db_session() as db:
+            page = await product_dao.get_list(db, offset=offset, limit=limit)
+
+            if not with_total:
+                return page
+
+            total = await product_dao.get_total(db)
+
+            return page, total
 
     @staticmethod
     async def create(*, obj: CreateProductParam) -> Product:

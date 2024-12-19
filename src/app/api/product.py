@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy import Select
+from typing import List
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 
 from src.app.schema.product import GetProductInfoDetails, GetProductListDetails
 from src.app.service.product import product_service
-from src.common.pagination import Page, paging_data
-from src.database import CurrentSession
+from src.common.schema import GetList, GetListPage, GetPageParams
 
 router = APIRouter()
 
@@ -14,11 +14,10 @@ def get_product(product: GetProductInfoDetails = Depends(product_service.get)) -
     return product
 
 
-@router.get('', summary='Product list', description='Get list of products')
-async def get_product_list(
-    db: CurrentSession, select: Select = Depends(product_service.get_select)
-) -> Page[GetProductListDetails]:
-    return await paging_data(db, select, GetProductListDetails)
+@router.get('', summary='Product page', description='Get page with products')
+async def get_product_page(params: GetPageParams = Query()) -> GetListPage[GetProductListDetails]:
+    page, total = await product_service.get_page(params)
+    return GetListPage.create(page, total, params)
 
 
 @router.post('', summary='New product', description='Create new product')

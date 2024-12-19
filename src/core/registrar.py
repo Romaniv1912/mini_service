@@ -4,7 +4,6 @@ from uuid import uuid4
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.middleware import is_valid_uuid4
 from fastapi import FastAPI
-from fastapi_pagination import add_pagination
 
 from src.app.api.router import router
 from src.core.conf import LOG_DIR, settings
@@ -49,7 +48,6 @@ def register_app():
     register_logger()
     register_exception(app)
     register_router(app)
-    register_page(app)
 
     return app
 
@@ -89,16 +87,6 @@ def register_exception(app: FastAPI):
     """
 
     # TODO: register exceptions
-
-
-def register_page(app: FastAPI):
-    """
-    Page query
-
-    :param app:
-    :return:
-    """
-    add_pagination(app)
 
 
 def register_middleware(app: FastAPI):
