@@ -10,9 +10,12 @@ from src.app.model import Product
 from src.app.schema.product import CreateProductParam, UpdateProductParam
 from src.common.schema import GetPageParams
 from src.database import async_db_session
+from src.utils.external_client import ExternalAsyncClient
 
 
 class ProductService:
+    max_concurrent = 10
+
     @staticmethod
     async def get(*, pk: int) -> Product:
         async with async_db_session() as db:
@@ -61,6 +64,34 @@ class ProductService:
             raise HTTPException(404, 'Product not found')
 
         return count
+
+    @staticmethod
+    async def fetch_external(external_id: Annotated[List[int], Query()]) -> Sequence[Product]:
+        semaphore = asyncio.Semaphore(product_service.max_concurrent)
+
+        async def fetch(cli: ExternalAsyncClient, database: AsyncSession, pk: int):
+            async with semaphore:
+                product = await cli.fetch_product(pk)
+
+                return await product_dao.add_or_update(
+                    database,
+                    CreateProductParam(
+                        name=product['title'],
+                        description=product['description'],
+                        price=product['price'],
+                        external_id=product['id'],
+                    ),
+                )
+
+        async with ExternalAsyncClient() as client:
+            async with async_db_session.begin() as db:
+                products = await asyncio.gather(*(fetch(client, db, pk) for pk in external_id))
+
+        return products
+
+    @staticmethod
+    async def refresh_all():
+        pass
 
 
 product_service = ProductService()

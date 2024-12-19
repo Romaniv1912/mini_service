@@ -38,3 +38,23 @@ def update_product(product: GetProductInfoDetails = Depends(product_service.upda
 )
 def delete_product() -> None:
     pass
+
+
+@router.post(
+    '/fetch_all/',
+    summary='Fetch products',
+    description='Fetch all products by external id',
+)
+def fetch_external_products(
+    products: List[GetProductListDetails] = Depends(product_service.fetch_external),
+) -> GetList[GetProductListDetails]:
+    return GetList(products)
+
+
+@router.post(
+    '/refresh_all/',
+    summary='Refresh products',
+    description='Refresh all products',
+)
+def refresh_all_products(bg: BackgroundTasks) -> None:
+    bg.add_task(product_service.refresh_all)

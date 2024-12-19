@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from sqlalchemy import Select, desc, select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.functions import count
 from sqlalchemy_crud_plus import CRUDPlus
@@ -50,6 +50,24 @@ class CRUDProduct(CRUDPlus[Product]):
         :return:
         """
         return await self.create_model(db, obj)
+
+    async def add_or_update(self, db: AsyncSession, obj: CreateProductParam) -> Product:
+        """
+        Add or update product
+
+        :param db:
+        :param obj:
+        :return:
+        """
+
+        row = await self.select_model_by_column(db, external_id=obj.external_id)
+
+        if row is None:
+            return await self.create(db, obj)
+
+        await self.update_model(db, row.id, obj)
+
+        return row
 
     async def update(self, db: AsyncSession, pk: int, obj: UpdateProductParam) -> int:
         """
