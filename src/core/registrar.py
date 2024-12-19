@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from src.app.api.router import router
 from src.core.conf import LOG_DIR, settings
 from src.database import create_table
+from src.utils.exception_handler import register_exception
 from src.utils.health_check import ensure_unique_route_names
 from src.utils.logs import set_customize_logfile, setup_logging
 from src.utils.openapi import simplify_operation_ids
@@ -76,17 +77,6 @@ def register_logger() -> None:
     """
     setup_logging(settings.LOG)
     set_customize_logfile(LOG_DIR, settings.LOG)
-
-
-def register_exception(app: FastAPI):
-    """
-    Register Exception
-
-    :param app:
-    :return:
-    """
-
-    # TODO: register exceptions
 
 
 def register_middleware(app: FastAPI):

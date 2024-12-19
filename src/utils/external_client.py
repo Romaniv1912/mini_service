@@ -12,9 +12,6 @@ class ExternalAsyncClient(AsyncClient):
     async def fetch_product(self, pk: int):
         resp = await self.get(f'{self._base_url}/products/{pk}')
 
-        return resp.json()
-
-    async def fetch_products(self):
-        resp = await self.get(f'{self._base_url}/products')
+        resp.raise_for_status()
 
         return resp.json()
