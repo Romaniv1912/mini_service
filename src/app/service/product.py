@@ -71,41 +71,51 @@ class ProductService:
 
     @staticmethod
     async def _fetch_external(
-        db: AsyncSession,
         external_id: Iterable[int],
         update_call: Callable[[AsyncSession, CreateProductParam], Awaitable[TVal]],
     ) -> Sequence[TVal]:
         """Fetch data from external service by ids"""
         semaphore = asyncio.Semaphore(product_service.max_concurrent)
 
-        async def fetch(cli: ExternalAsyncClient, database: AsyncSession, pk: int):
+        async def fetch(cli: ExternalAsyncClient, pk: int):
             """Fetch data for single external id"""
 
             async with semaphore:
-                product = await cli.fetch_product(pk)
+                data = await cli.fetch_product(pk)
 
-                return await update_call(
-                    database,
-                    CreateProductParam(
-                        name=product['title'],
-                        description=product['description'],
-                        price=product['price'],
-                        external_id=product['id'],
-                    ),
-                )
+            return CreateProductParam(
+                name=data['title'],
+                description=data['description'],
+                price=data['price'],
+                external_id=data['id'],
+            )
+
+        # For single update through asyncio gather
+        async def update(product: CreateProductParam) -> TVal:
+            async with semaphore, async_db_session.begin() as db:
+                return await update_call(db, product)
+
+        async def group_update(products: List[CreateProductParam]) -> List[TVal]:
+            async with async_db_session.begin() as db:
+                return [await update_call(db, product) for product in products]
 
         # Gather data with <max_concurrent> number
         async with ExternalAsyncClient() as client:
-            products = await asyncio.gather(*(fetch(client, db, pk) for pk in external_id))
+            fetched_products = await asyncio.gather(*(fetch(client, pk) for pk in external_id))
 
-        return products
+        # If you want to update in separate transaction
+        # result = await asyncio.gather(*(update(x) for x in fetched_products))
+
+        # If you want to update in single transaction
+        result = await group_update(fetched_products)
+
+        return result
 
     @staticmethod
     async def fetch_external(
         external_id: Annotated[List[int], Query(min_length=1, max_length=100)],
     ) -> Sequence[Product]:
-        async with async_db_session.begin() as db:
-            return await product_service._fetch_external(db, external_id, product_dao.add_or_update)
+        return await product_service._fetch_external(external_id, product_dao.add_or_update)
 
     @staticmethod
     async def refresh_all(bg: BackgroundTasks) -> Literal['running', 'started']:
@@ -127,7 +137,7 @@ class ProductService:
                         products = await product_dao.get_list(db, offset=offset, limit=limit)
 
                         await product_service._fetch_external(
-                            db, (x.external_id for x in products), product_dao.update_by_external_id
+                            (x.external_id for x in products), product_dao.update_by_external_id
                         )
                         await db.commit()
 
