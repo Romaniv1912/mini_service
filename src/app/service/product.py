@@ -1,6 +1,6 @@
 import asyncio
 
-from typing import Annotated, Awaitable, Callable, Iterable, Literal, Sequence, Tuple, TypeVar, List
+from typing import Annotated, Awaitable, Callable, Iterable, List, Literal, Sequence, Tuple, TypeVar
 
 from fastapi import BackgroundTasks, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
