@@ -1,6 +1,6 @@
 import asyncio
 
-from typing import Annotated, Awaitable, Callable, Iterable, Literal, Sequence, Tuple, TypeVar
+from typing import Annotated, Awaitable, Callable, Iterable, Literal, Sequence, Tuple, TypeVar, List
 
 from fastapi import BackgroundTasks, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -102,7 +102,7 @@ class ProductService:
 
     @staticmethod
     async def fetch_external(
-        external_id: Annotated[Iterable[int], Query(min_length=1, max_length=100)],
+        external_id: Annotated[List[int], Query(min_length=1, max_length=100)],
     ) -> Sequence[Product]:
         async with async_db_session.begin() as db:
             return await product_service._fetch_external(db, external_id, product_dao.add_or_update)
