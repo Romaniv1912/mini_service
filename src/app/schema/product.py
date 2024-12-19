@@ -8,8 +8,8 @@ from src.common.schema import SchemaBase
 class ProductSchemaBase(SchemaBase):
     name: str = Field(max_length=100)
     description: str = Field(max_length=255)
-    price: float
-    external_id: int | None
+    price: float = Field(gt=0)
+    external_id: int
 
 
 class CreateProductParam(ProductSchemaBase):
