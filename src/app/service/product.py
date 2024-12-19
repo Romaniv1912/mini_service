@@ -66,10 +66,15 @@ class ProductService:
         return count
 
     @staticmethod
-    async def fetch_external(external_id: Annotated[List[int], Query()]) -> Sequence[Product]:
+    async def fetch_external(
+        external_id: Annotated[List[int], Query(min_length=1, max_length=100)],
+    ) -> Sequence[Product]:
+        """Fetch data from external service by ids"""
         semaphore = asyncio.Semaphore(product_service.max_concurrent)
 
         async def fetch(cli: ExternalAsyncClient, database: AsyncSession, pk: int):
+            """Fetch data for single external id"""
+
             async with semaphore:
                 product = await cli.fetch_product(pk)
 
@@ -83,6 +88,7 @@ class ProductService:
                     ),
                 )
 
+        # Gather data with <max_concurrent> number
         async with ExternalAsyncClient() as client:
             async with async_db_session.begin() as db:
                 products = await asyncio.gather(*(fetch(client, db, pk) for pk in external_id))
