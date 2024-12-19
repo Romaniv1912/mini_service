@@ -20,7 +20,7 @@ async def get_product_page(params: GetPageParams = Query()) -> GetListPage[GetPr
     return GetListPage.create(page, total, params)
 
 
-@router.post('', summary='New product', description='Create new product')
+@router.post('', summary='New product', description='Create new product', status_code=201)
 def create_product(product: GetProductInfoDetails = Depends(product_service.create)) -> GetProductInfoDetails:
     return product
 
@@ -41,7 +41,7 @@ def delete_product() -> None:
 
 
 @router.post(
-    '/fetch_all/',
+    '/fetch_all',
     summary='Fetch products',
     description='Fetch all products by external id',
 )
@@ -52,7 +52,7 @@ def fetch_external_products(
 
 
 @router.post(
-    '/refresh_all/',
+    '/refresh_all',
     summary='Refresh products',
     description='Refresh all products',
 )
