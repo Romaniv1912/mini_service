@@ -80,6 +80,16 @@ class CRUDProduct(CRUDPlus[Product]):
         """
         return await self.update_model(db, pk, obj)
 
+    async def update_by_external_id(self, db: AsyncSession, obj: CreateProductParam) -> int:
+        """
+        Update product by external id
+
+        :param db:
+        :param obj:
+        :return:
+        """
+        return await self.update_model_by_column(db, obj, external_id=obj.external_id)
+
     async def delete(self, db, pk: int) -> int:
         """
         Delete product by id

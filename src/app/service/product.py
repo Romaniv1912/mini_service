@@ -1,6 +1,6 @@
 import asyncio
 
-from typing import Annotated, List, Literal, Sequence, Tuple
+from typing import Annotated, Awaitable, Callable, Iterable, Literal, Sequence, Tuple, TypeVar
 
 from fastapi import BackgroundTasks, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +11,8 @@ from src.app.schema.product import CreateProductParam, UpdateProductParam
 from src.common.schema import GetPageParams
 from src.database import async_db_session
 from src.utils.external_client import ExternalAsyncClient
+
+TVal = TypeVar('TVal')
 
 
 class ProductService:
@@ -68,9 +70,11 @@ class ProductService:
         return count
 
     @staticmethod
-    async def fetch_external(
-        external_id: Annotated[List[int], Query(min_length=1, max_length=100)],
-    ) -> Sequence[Product]:
+    async def _fetch_external(
+        db: AsyncSession,
+        external_id: Iterable[int],
+        update_call: Callable[[AsyncSession, CreateProductParam], Awaitable[TVal]],
+    ) -> Sequence[TVal]:
         """Fetch data from external service by ids"""
         semaphore = asyncio.Semaphore(product_service.max_concurrent)
 
@@ -80,7 +84,7 @@ class ProductService:
             async with semaphore:
                 product = await cli.fetch_product(pk)
 
-                return await product_dao.add_or_update(
+                return await update_call(
                     database,
                     CreateProductParam(
                         name=product['title'],
@@ -92,10 +96,16 @@ class ProductService:
 
         # Gather data with <max_concurrent> number
         async with ExternalAsyncClient() as client:
-            async with async_db_session.begin() as db:
-                products = await asyncio.gather(*(fetch(client, db, pk) for pk in external_id))
+            products = await asyncio.gather(*(fetch(client, db, pk) for pk in external_id))
 
         return products
+
+    @staticmethod
+    async def fetch_external(
+        external_id: Annotated[Iterable[int], Query(min_length=1, max_length=100)],
+    ) -> Sequence[Product]:
+        async with async_db_session.begin() as db:
+            return await product_service._fetch_external(db, external_id, product_dao.add_or_update)
 
     @staticmethod
     async def refresh_all(bg: BackgroundTasks) -> Literal['running', 'started']:
@@ -107,11 +117,27 @@ class ProductService:
             product_service.is_refresh_all_run = True
 
         async def fetch():
-            # TODO: Write fetch logic
+            try:
+                offset, limit = 0, 50
 
-            # Release <is_refresh_all_run>
-            async with product_service.refresh_all_lock:
-                product_service.is_refresh_all_run = False
+                async with async_db_session() as db:
+                    total = await product_dao.get_total(db)
+
+                    while offset < total:
+                        products = await product_dao.get_list(db, offset=offset, limit=limit)
+
+                        await product_service._fetch_external(
+                            db, (x.external_id for x in products), product_dao.update_by_external_id
+                        )
+                        await db.commit()
+
+                        offset += limit
+            except:
+                raise
+            finally:
+                # Release <is_refresh_all_run>
+                async with product_service.refresh_all_lock:
+                    product_service.is_refresh_all_run = False
 
         bg.add_task(fetch)
 
