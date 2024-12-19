@@ -1,8 +1,8 @@
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from fastapi import APIRouter, Depends, Query
 
-from src.app.schema.product import GetProductInfoDetails, GetProductListDetails
+from src.app.schema.product import CreateRefreshResponse, GetProductInfoDetails, GetProductListDetails
 from src.app.service.product import product_service
 from src.common.schema import GetList, GetListPage, GetPageParams
 
@@ -56,5 +56,5 @@ def fetch_external_products(
     summary='Refresh products',
     description='Refresh all products',
 )
-def refresh_all_products(bg: BackgroundTasks) -> None:
-    bg.add_task(product_service.refresh_all)
+def refresh_all_products(status=Depends(product_service.refresh_all)) -> CreateRefreshResponse:
+    return CreateRefreshResponse(status=status)

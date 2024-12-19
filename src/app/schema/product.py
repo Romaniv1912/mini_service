@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import ConfigDict, Field
 
@@ -33,3 +34,7 @@ class GetProductListDetails(ProductSchemaBase):
 
 class GetProductInfoDetails(GetProductListDetails):
     model_config = ConfigDict(from_attributes=True)
+
+
+class CreateRefreshResponse(SchemaBase):
+    status: Literal['started', 'running'] = 'started'

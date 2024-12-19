@@ -1,8 +1,8 @@
 import asyncio
 
-from typing import Annotated, List, Sequence, Tuple
+from typing import Annotated, List, Literal, Sequence, Tuple
 
-from fastapi import HTTPException, Query
+from fastapi import BackgroundTasks, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.crud.product import product_dao
@@ -14,7 +14,9 @@ from src.utils.external_client import ExternalAsyncClient
 
 
 class ProductService:
-    max_concurrent = 10
+    max_concurrent: int = 10
+    is_refresh_all_run: bool = False
+    refresh_all_lock = asyncio.Lock()
 
     @staticmethod
     async def get(*, pk: int) -> Product:
@@ -96,8 +98,24 @@ class ProductService:
         return products
 
     @staticmethod
-    async def refresh_all():
-        pass
+    async def refresh_all(bg: BackgroundTasks) -> Literal['running', 'started']:
+        # Ensure task is done
+        async with product_service.refresh_all_lock:
+            if product_service.is_refresh_all_run:
+                return 'running'
+
+            product_service.is_refresh_all_run = True
+
+        async def fetch():
+            # TODO: Write fetch logic
+
+            # Release <is_refresh_all_run>
+            async with product_service.refresh_all_lock:
+                product_service.is_refresh_all_run = False
+
+        bg.add_task(fetch)
+
+        return 'started'
 
 
 product_service = ProductService()
