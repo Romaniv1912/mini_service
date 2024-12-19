@@ -10,11 +10,11 @@ class ExternalAsyncClient(AsyncClient):
         self._base_url = 'https://dummyjson.com'
 
     async def fetch_product(self, pk: int):
-        resp = await self.get(f'/products/{pk}')
+        resp = await self.get(f'{self._base_url}/products/{pk}')
 
-        return await resp.json()
+        return resp.json()
 
     async def fetch_products(self):
-        resp = await self.get('/products')
+        resp = await self.get(f'{self._base_url}/products')
 
-        return await resp.json()
+        return resp.json()
